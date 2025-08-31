@@ -12,7 +12,6 @@ from data.load_data import get_data
 from data.loaders import tabular_dl
 from data.utils import sample_data
 from model.model import ContrastiveMLP
-from util.schedules import WarmupCosineSchedule, LRSchedule
 from util.meter import AverageMeter
 from util.checkpoint import make_checkpoint
 from util.metrics import evaluate_metrics
@@ -41,7 +40,7 @@ def parse_option():
     # opt config
     parser.add_argument('--batch_size', type=int, default= 64, help='batch size')
     parser.add_argument('--weight_decay', type=float, default= 1e-6, help='weight decay')
-    parser.add_argument('--lr', type=float, default= 1e-6, help='learning rate')
+    parser.add_argument('--lr', type=float, default= 0.001, help='learning rate')
     parser.add_argument('--epochs', type=int, default= 100, help='number of epochs')
     parser.add_argument('--device', type=str, default='cuda', help='device')
     parser.add_argument('--print_freq', type=int, default= 10, help='how many batches to print after')
@@ -131,35 +130,20 @@ def set_model(opt):
     criterion = nn.CrossEntropyLoss(label_smoothing = opt.label_smoothing)
     return model, criterion
 
-def set_optimiser(opt, model, train_dl):
+def set_optimiser(opt, model):
     optimiser = T.optim.AdamW(
         model.parameters(),
-        lr=1e-6,
+        lr=opt.lr,
         betas = (0.9, 0.999),
         weight_decay = opt.weight_decay,
     )
-    
-    base_schedule = WarmupCosineSchedule(
-        start_val = 1e-6,
-        end_val = 1e-6,
-        ref_val = opt.lr,
-        T_max = (opt.epochs * len(train_dl)),
-        warmup_steps =  int((opt.epochs//10) * len(train_dl)),
-    )
-    
-    lr_schedule = LRSchedule(
-        optimiser,
-        schedule = base_schedule,
-    )
-    
-    return optimiser, lr_schedule
+    return optimiser
 
 def train(
     train_loader, 
     model, 
     criterion, 
     optimizer, 
-    schedule,
     epoch, 
     opt,
 ):
@@ -189,7 +173,6 @@ def train(
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        schedule.step()
         
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -218,13 +201,13 @@ def main():
     model, criterion = set_model(opt)
     
     # build optimizer
-    optimiser, schedule = set_optimiser(opt, model, train_loader)
-
+    optimiser = set_optimiser(opt, model)
+    
     # training routine
     for epoch in range(1, opt.epochs + 1):
         # train for one epoch
         time1 = time.time()
-        loss = train(train_loader, model, criterion, optimiser, schedule, epoch, opt)
+        loss = train(train_loader, model, criterion, optimiser, epoch, opt)
         time2 = time.time()
         print('epoch {}, total time {:.2f}'.format(epoch, time2 - time1))
         
@@ -240,7 +223,6 @@ def main():
     make_checkpoint(
         model = model, 
         optimiser = optimiser, 
-        schedular = schedule, 
         path = 'weights/clan_finetuned.pt.tar', 
     )
 
