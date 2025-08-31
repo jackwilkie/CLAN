@@ -15,6 +15,7 @@ from model.model import ContrastiveMLP
 from util.meter import AverageMeter
 from util.checkpoint import make_checkpoint
 from util.metrics import macro_f1_score
+from util.checkpoint import load_checkpoint
 
 def parse_option():
     parser = argparse.ArgumentParser('argument for training')
@@ -33,6 +34,7 @@ def parse_option():
     parser.add_argument('--neurons', type=str, default='1024,1024,1024,1024', help='neurons in each mlp block')
     parser.add_argument('--dropout', type=float, default=0.0, help='dropout rate')
     parser.add_argument('--residual', type=bool, default=True, help='Whether to use residual connections in mlp')
+    parser.add_argument('--checkpoint_path', type=str, default='weights/clan.pt.tar', help='path to saved weights')
     
     # opt config
     parser.add_argument('--batch_size', type=int, default= 64, help='batch size')
@@ -110,6 +112,13 @@ def set_model(opt):
         dropout = opt.dropout,
         residual = opt.residual,
     )
+    
+    model, _, _, _, _ = load_checkpoint(
+        opt.checkpoint_path,
+        model,
+    )
+    
+    model.eval()
     model = model.to(opt.device)
     
     # get loss
@@ -212,6 +221,8 @@ def main():
         print('epoch {}, total time {:.2f}'.format(epoch, time2 - time1))
         schedule.step()
         
+    model.eval()
+    
     # eval model
     with T.no_grad():
         y_pred = T.argmax(model.forward_finetune(T.tensor(x_test, dtype = T.float32, device = opt.device)), dim = -1).cpu().detach().numpy()

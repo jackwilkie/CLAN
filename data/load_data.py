@@ -101,10 +101,10 @@ def get_data(
     
     # -- noramlise data
     norm = ZNormaliser(x_train)
-    x_train = norm.normalise(x_train)
     x_val = norm.normalise(x_val) if x_val is not None else None
     x_test = norm.normalise(x_test) if x_test is not None else None
     x_zd = norm.normalise(x_zd) if x_zd is not None else None
+    x_train = norm.normalise(x_train)
     
     return x_train, y_train, x_val, y_val, x_test, y_test, x_zd, y_zd
     

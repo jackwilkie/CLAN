@@ -16,6 +16,7 @@ from util.features import get_features
 from util.metrics import balanced_auroc
 from util.distance import chunked_centroid_sims
 
+
 def parse_option():
     parser = argparse.ArgumentParser('argument for training')
 
@@ -81,6 +82,7 @@ def load_data(opt):
 
 def load_model(opt):
     # get model
+    
     model = ContrastiveMLP(
         d_in = 72,
         n_classes = opt.n_classes,
@@ -118,7 +120,7 @@ def centroid_eval(
         chunk_size = opt.chunk_size,
         move_to_cpu = False,
     )
-    benign_features = F.normalize(benign_features, dim = -1)
+    #benign_features = F.normalize(benign_features, dim = -1)
     
     # get test features
     test_features, test_labels = get_features(
@@ -128,10 +130,11 @@ def centroid_eval(
         chunk_size = opt.chunk_size,
         move_to_cpu = False,
     )
-    test_features = F.normalize(test_features, dim = -1)
+    
+    #test_features = F.normalize(test_features, dim = -1)
     
     # calculate centroid
-    centroid = F.normalize(T.mean(benign_features, dim = 0), dim = -1)
+    centroid = T.mean(benign_features, dim = 0)
     
     # get scores
     sims = chunked_centroid_sims(
@@ -141,7 +144,7 @@ def centroid_eval(
     )
     
     # get auroc
-    auroc_scores = balanced_auroc(scores = sims, labels= test_labels, return_class_level=True)
+    auroc_scores = balanced_auroc(scores = -sims, labels= test_labels, return_class_level=True)
     metrics = {f'class_{i+1}_auroc': auroc for i,auroc in enumerate(auroc_scores)}
     metrics['mean_auroc'] = np.mean(auroc_scores)
 
@@ -151,8 +154,8 @@ def main():
     opt = parse_option()
 
     # get data
-    x_train, y_train, x_test, y_test= load_data(opt)
-    
+    x_train, y_train, x_test, y_test = load_data(opt)
+
     # get model
     model = load_model(opt)
     

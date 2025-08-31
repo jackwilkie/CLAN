@@ -32,7 +32,7 @@ def parse_option():
     parser.add_argument('--residual', type=bool, default=False, help='Whether to use residual connections in mlp')
     
     # loss config
-    parser.add_argument('--margin', type=float, default=1.0, help='loss function margin value')
+    parser.add_argument('--margin', type=float, default= 0.6, help='loss function margin value')
     parser.add_argument('--squared', type=bool, default=True, help='whether to square terms in loss function')
     parser.add_argument('--resample_p_sample', type=float, default=1.0, help='probability of applying uniform resampling to a sample')
     parser.add_argument('--resample_p_feature', type=float, default=0.1, help='probability of resampling a feature given a sample is being augmented')
@@ -41,8 +41,8 @@ def parse_option():
     
     # opt config
     parser.add_argument('--batch_size', type=int, default= 8192, help='batch size')
-    parser.add_argument('--weight_decay', type=float, default= 0.0, help='weight decay')
-    parser.add_argument('--lr', type=float, default= .0001, help='learning rate')
+    parser.add_argument('--weight_decay', type=float, default= 0.0001, help='weight decay')
+    parser.add_argument('--lr', type=float, default= .000001, help='learning rate')
     parser.add_argument('--epochs', type=int, default= 200, help='number of epochs')
     parser.add_argument('--device', type=str, default='cuda', help='device')
     parser.add_argument('--print_freq', type=int, default= 10, help='how many batches to print after')
