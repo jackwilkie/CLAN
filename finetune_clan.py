@@ -5,17 +5,19 @@ import torch as T
 import torch.nn as nn
 import argparse
 import time
-from util.schedules import WarmupCosineSchedule, LRSchedule
 import sys
+from pprint import pprint
 
 from data.load_data import get_data
 from data.loaders import tabular_dl
 from data.utils import sample_data
 from model.model import ContrastiveMLP
+from util.schedules import WarmupCosineSchedule, LRSchedule
 from util.meter import AverageMeter
 from util.checkpoint import make_checkpoint
-from util.metrics import macro_f1_score
+from util.metrics import evaluate_metrics
 from util.checkpoint import load_checkpoint
+from util.set_dropout import set_dropout
 
 def parse_option():
     parser = argparse.ArgumentParser('argument for training')
@@ -38,7 +40,7 @@ def parse_option():
     
     # opt config
     parser.add_argument('--batch_size', type=int, default= 64, help='batch size')
-    parser.add_argument('--weight_decay', type=float, default= 0.0, help='weight decay')
+    parser.add_argument('--weight_decay', type=float, default= 1e-6, help='weight decay')
     parser.add_argument('--lr', type=float, default= 1e-6, help='learning rate')
     parser.add_argument('--epochs', type=int, default= 100, help='number of epochs')
     parser.add_argument('--device', type=str, default='cuda', help='device')
@@ -89,6 +91,8 @@ def set_loader(opt):
     x_test = (x_test - x_train.mean(axis = 0))/(x_train.std(axis =0, ddof=1))
     x_train = (x_train - x_train.mean(axis = 0))/(x_train.std(axis =0, ddof=1))
     
+    x_test = T.tensor(x_test, dtype = T.float32, device = opt.device)
+    
     # make dl    
     train_dl = tabular_dl(
         x = x_train,
@@ -117,6 +121,8 @@ def set_model(opt):
         opt.checkpoint_path,
         model,
     )
+    set_dropout(model, opt.dropout)
+    model = nn.Sequential(model, nn.Linear(opt.d_out, opt.n_classes))
     
     model.eval()
     model = model.to(opt.device)
@@ -128,7 +134,7 @@ def set_model(opt):
 def set_optimiser(opt, model, train_dl):
     optimiser = T.optim.AdamW(
         model.parameters(),
-        lr=1e-6, # initial learning rate
+        lr=1e-6,
         betas = (0.9, 0.999),
         weight_decay = opt.weight_decay,
     )
@@ -153,6 +159,7 @@ def train(
     model, 
     criterion, 
     optimizer, 
+    schedule,
     epoch, 
     opt,
 ):
@@ -172,7 +179,7 @@ def train(
         y = y.to(opt.device)
         bsz = x.size(0)
 
-        y_pred = model.forward_finetune(x)
+        y_pred = model(x)
         loss = criterion(y_pred, y)
 
         # update metric
@@ -182,6 +189,7 @@ def train(
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        schedule.step()
         
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -216,18 +224,17 @@ def main():
     for epoch in range(1, opt.epochs + 1):
         # train for one epoch
         time1 = time.time()
-        loss = train(train_loader, model, criterion, optimiser, epoch, opt)
+        loss = train(train_loader, model, criterion, optimiser, schedule, epoch, opt)
         time2 = time.time()
         print('epoch {}, total time {:.2f}'.format(epoch, time2 - time1))
-        schedule.step()
         
     model.eval()
     
     # eval model
     with T.no_grad():
-        y_pred = T.argmax(model.forward_finetune(T.tensor(x_test, dtype = T.float32, device = opt.device)), dim = -1).cpu().detach().numpy()
+        y_pred = T.argmax(model(x_test), dim = -1).cpu().detach().numpy()
     
-    print(f'F1 Score: {macro_f1_score(y_test, y_pred)}')
+    pprint(evaluate_metrics(y_test, y_pred))
     
     # save the trained model
     make_checkpoint(

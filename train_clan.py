@@ -28,21 +28,21 @@ def parse_option():
     parser.add_argument('--d_out', type=int, default=64, help='model output dimensionality')
     parser.add_argument('--n_classes', type=int, default=12, help='number of classes in dataset')
     parser.add_argument('--neurons', type=str, default='1024,1024,1024,1024', help='neurons in each mlp block')
-    parser.add_argument('--dropout', type=float, default=0.1, help='dropout rate')
-    parser.add_argument('--residual', type=bool, default=False, help='Whether to use residual connections in mlp')
+    parser.add_argument('--dropout', type=float, default=0.0, help='dropout rate')
+    parser.add_argument('--residual', type=bool, default=True, help='Whether to use residual connections in mlp')
     
     # loss config
-    parser.add_argument('--margin', type=float, default= 0.6, help='loss function margin value')
-    parser.add_argument('--squared', type=bool, default=True, help='whether to square terms in loss function')
+    parser.add_argument('--margin', type=float, default= 0.5, help='loss function margin value')
+    parser.add_argument('--squared', type=bool, default=False, help='whether to square terms in loss function')
     parser.add_argument('--resample_p_sample', type=float, default=1.0, help='probability of applying uniform resampling to a sample')
     parser.add_argument('--resample_p_feature', type=float, default=0.1, help='probability of resampling a feature given a sample is being augmented')
     parser.add_argument('--resample_mean', type=float, default=0.0, help='mean value of uniform resampling')
-    parser.add_argument('--resample_max', type=float, default=1.5, help='uniform distribution max')
+    parser.add_argument('--resample_max', type=float, default=1.7, help='uniform distribution max')
     
     # opt config
     parser.add_argument('--batch_size', type=int, default= 8192, help='batch size')
-    parser.add_argument('--weight_decay', type=float, default= 0.0001, help='weight decay')
-    parser.add_argument('--lr', type=float, default= .000001, help='learning rate')
+    parser.add_argument('--weight_decay', type=float, default= 0.0, help='weight decay')
+    parser.add_argument('--lr', type=float, default= .0001, help='learning rate')
     parser.add_argument('--epochs', type=int, default= 200, help='number of epochs')
     parser.add_argument('--device', type=str, default='cuda', help='device')
     parser.add_argument('--print_freq', type=int, default= 10, help='how many batches to print after')
@@ -146,6 +146,7 @@ def train(
     augmentation,
     criterion, 
     optimizer, 
+    schedule,
     epoch, 
     opt,
 ):
@@ -182,6 +183,7 @@ def train(
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        schedule.step()
         
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -217,10 +219,9 @@ def main():
     for epoch in range(1, opt.epochs + 1):
         # train for one epoch
         time1 = time.time()
-        loss = train(train_loader, model, augmentation, criterion, optimiser, epoch, opt)
+        loss = train(train_loader, model, augmentation, criterion, optimiser, schedule, epoch, opt)
         time2 = time.time()
         print('epoch {}, total time {:.2f}'.format(epoch, time2 - time1))
-        schedule.step()
         
     # save the trained model
     make_checkpoint(

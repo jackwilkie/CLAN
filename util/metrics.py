@@ -5,7 +5,7 @@ from torch import Tensor
 import numpy as np
 from numpy import ndarray
 from sklearn.metrics import roc_auc_score
-from sklearn.metrics import f1_score
+from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
 
 # -- auroc
 def mean_auroc(
@@ -52,6 +52,12 @@ def balanced_auroc(scores, labels, return_class_level: bool = False):
     else:
         return class_auroc[:-1]
 
-# -- macro f1 score
-def macro_f1_score(y_true: ndarray, y_pred: ndarray) -> float:
-    return f1_score(y_true, y_pred, average="macro", zero_division = 0.0)
+# -- supervised metrics
+def evaluate_metrics(y_true, y_pred, prefix = ''):
+    metrics = {
+        f"{prefix}accuracy": accuracy_score(y_true, y_pred),
+        f"{prefix}mean_recall": recall_score(y_true, y_pred, average="macro"),
+        f"{prefix}mean_precision": precision_score(y_true, y_pred, average="macro"),
+        f"{prefix}macro_f1": f1_score(y_true, y_pred, average="macro"),
+    }
+    return metrics
