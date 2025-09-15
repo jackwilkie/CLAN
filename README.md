@@ -3,7 +3,7 @@
   <img src="images/architecture.png" width="700">
 </p>
 
-Official Github repo for the paper "Contrastive Self-Supervised Network Intrusion Detection Using Augmented Negative Pairs". This repository covers a reference implementation for both the Contrastive Learning using Augmented Negatives (CLAN) method decribed in the work "Contrastive Self-Supervised Network Intrusion Detection Using Augmented Negative Pairs" available [here (published)](https://ieeexplore.ieee.org/document/11129979) and [here (accepted)](https://jackwilkie.github.io/papers/clan_main.pdf).
+Official Github repo for the paper "Contrastive Self-Supervised Network Intrusion Detection Using Augmented Negative Pairs" available [here (published)](https://ieeexplore.ieee.org/document/11129979) and [here (accepted)](https://jackwilkie.github.io/papers/clan_main.pdf). This repository covers a reference implementation for the Contrastive Learning using Augmented Negatives (CLAN) method.
 
 ## CLAN
 
