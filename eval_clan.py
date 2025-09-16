@@ -18,7 +18,7 @@ from util.distance import chunked_centroid_sims
 
 
 def parse_option():
-    parser = argparse.ArgumentParser('argument for training')
+    parser = argparse.ArgumentParser('arguments for eval')
 
     # data config
     parser.add_argument('--data_path', type=str, default='data/lycos.csv', help='path to dataset')
