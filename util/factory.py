@@ -1,5 +1,5 @@
 """
-Utils for factiry functions
+Utils for factory functions
 
 Created on Mon Aug 21 10:08:12 2023
 
