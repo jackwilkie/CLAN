@@ -129,7 +129,7 @@ python3 eval_clan.py
 
 The performance metrics of the model will be printed to the terminal after evaluation.
 
-### (4) Evaluate Models
+### (4) Finetune Models
 
 CLAD can be finetuned by running [finetune_clan.py](./finetune_clan.py):
 
