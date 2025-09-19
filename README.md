@@ -111,7 +111,7 @@ Once downloaded, move the file to: `./data/lycos.csv`.
 
 ### (3) Train Model
 
-CLAN can be trained using the [train_clan.py](./train_clan.py) script:
+CLAN can be trained using the [`train_clan.py`](./train_clan.py) script:
 
 ```
 python3 train_clan.py
@@ -121,7 +121,7 @@ This will train the model and save the weights to `./weights/clan.pt.tar`.
 
 ### (4) Evaluate Model
 
-CLAD can be evaluated by running [eval_clan.py](./eval_clan.py):
+CLAD can be evaluated by running [`eval_clan.py`](./eval_clan.py):
 
 ```
 python3 eval_clan.py
@@ -131,7 +131,7 @@ The performance metrics of the model will be printed to the terminal after evalu
 
 ### (4) Finetune Models
 
-CLAD can be finetuned by running [finetune_clan.py](./finetune_clan.py):
+CLAD can be finetuned by running [`finetune_clan.py`](./finetune_clan.py):
 
 ```
 python3 finetune_clan.py
